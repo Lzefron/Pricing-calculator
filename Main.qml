@@ -34,6 +34,11 @@ ApplicationWindow {
             let rounded = Math.ceil(total / 10) * 10
             roundPriceOutput.text = "৳ " + rounded
 
+            //profit calculate from the roundPriceOutput
+            let profitMoney=0;
+            profitMoney=rounded-((r*p)+w)
+            profitMoneyText.text = " ৳ " + profitMoney.toFixed(2)
+
             // Update Barcode
             let dateStr = new Date().toLocaleDateString('en-GB').replace(/\//g, '')
             barcodeText.text = "LNR-" + dateStr + "000" + rounded
@@ -83,51 +88,78 @@ ApplicationWindow {
 
         // --- 1. Define the Template (The "Component") ---
         // This tells Qt: "This is what a Lunara Input looks like"
-        component LunaraInput : Row {
-            spacing: 8
-            property string labelText: ""
-            property string placeholder: ""
-            property string initialValue: ""
-            property alias textValue: inputField.text // This lets us get the price later
+        // --- 1. Define the Template ---
+                component LunaraInput : Row {
+                    spacing: 8
+                    property string labelText: ""
+                    property string placeholder: ""
+                    property string initialValue: ""
+                    property bool showPercentBtn: false // This controls if the % button appears
+                    property alias textValue: inputField.text
 
-            Rectangle {
-                width: 100; height: 45; radius: 6
-                color: "#737373"
-                Text {
-                    text: labelText
-                    color: "#2ECC71"
-                    font.pixelSize: 14
-                    anchors.centerIn: parent
+                    // Label Box
+                    Rectangle {
+                        width: 100; height: 45; radius: 6
+                        color: "#737373"
+                        Text {
+                            text: labelText
+                            color: "#2ECC71"
+                            font.pixelSize: 14
+                            anchors.centerIn: parent
+                        }
+                    }
+
+                    // Input Box (Shrinks automatically if % button is visible)
+                    Rectangle {
+                        width: showPercentBtn ? 152 : 200; height: 45; radius: 6
+                        color: inputField.activeFocus ? Qt.rgba(1, 1, 1, 0.4) : Qt.rgba(1, 1, 1, 0.15)
+                        border.color: inputField.activeFocus ? "#2ECC71" : "transparent"
+                        border.width: 1
+
+                        TextField {
+                            id: inputField
+                            anchors.fill: parent
+                            anchors.margins: 4
+                            text: initialValue
+                            placeholderText: placeholder
+                            color: "#2ECC71"
+                            font.pixelSize: 14
+                            inputMethodHints: Qt.ImhFormattedNumbersOnly
+                            background: null
+                            verticalAlignment: TextInput.AlignVCenter
+                        }
+                    }
+
+                    // Percentage Button (Only shows for Profit field)
+                    Rectangle {
+                        visible: showPercentBtn
+                        width: 40; height: 45; radius: 6
+                        color: "#2ECC71"
+                        Text {
+                            text: "%"
+                            color: "white"
+                            font.bold: true
+                            anchors.centerIn: parent
+                        }
+                        MouseArea {
+                            anchors.fill: parent
+                            onClicked: {
+                                if(!inputField.text.includes("%")){
+                                    inputField.text += "%"
+                                } else {
+                                    inputField.text = inputField.text.replace("%","")
+                                }
+                            }
+                        }
+                    }
                 }
-            }
-
-            Rectangle {
-                width: 200; height: 45; radius: 6
-                // If the field is clicked, it turns bright white (0.4 alpha), else dim (0.15)
-                color: inputField.activeFocus ? Qt.rgba(1, 1, 1, 0.4) : Qt.rgba(1, 1, 1, 0.15)
-                border.color: inputField.activeFocus ? "#FF69B4" : "transparent"
-                border.width: 1
-
-                TextField {
-                    id: inputField
-                    anchors.fill: parent
-                    anchors.margins: 4
-                    text: initialValue
-                    placeholderText: placeholder
-                    color: "#2ECC71" // Now 100% bright white!
-                    font.pixelSize: 14
-                    inputMethodHints: Qt.ImhFormattedNumbersOnly
-                    background: null
-                    verticalAlignment: TextInput.AlignVCenter
-                }
-            }
-        }
 
         // --- 2. Use the Component 4 Times ---
         LunaraInput { id: rmbRate; labelText: "RMB Rate"; placeholder: "Enter rate" }
         LunaraInput { id: prodPrice; labelText: "Price";    placeholder: "Enter price" }
         LunaraInput { id: prodWeight; labelText: "Weight";   placeholder: "Enter weight" }
-        LunaraInput { id: profitInput; labelText: "Profit";  initialValue: "30%" }
+        LunaraInput { id: profitInput; labelText: "Profit";  initialValue: "30%"; showPercentBtn: true }
+
     }
     Column {
         anchors.horizontalCenter: parent.horizontalCenter
@@ -177,6 +209,28 @@ ApplicationWindow {
                 id: roundPriceOutput
                 text: "৳ 0"
                 color: "#FF69B4" // Pink to make it stand out
+                font.pixelSize: 22; font.bold: true
+                anchors.centerIn: parent
+            }
+        }
+
+        //---for profit---
+        Text {
+            text: "Profit"
+            color: "white"
+            font.pixelSize: 16
+            anchors.horizontalCenter: parent.horizontalCenter
+        }
+
+        Rectangle{
+            width: 250; height: 45; radius: 8
+            color: Qt.rgba(1, 1, 1, 0.1)
+            border.color: "#FF69B4"
+            anchors.horizontalCenter: parent.horizontalCenter
+            Text{
+                id:profitMoneyText
+                text:"৳ 0"
+                color: "#F28C28" // Orange to make it stand out
                 font.pixelSize: 22; font.bold: true
                 anchors.centerIn: parent
             }
